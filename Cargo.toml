@@ -1,0 +1,20 @@
+[package]
+name = "instant-onboarder"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "*", features = ["full"] }
+clap = { version = "*", features = ["derive"] }
+ratatui = "*"
+crossterm = "*"
+termimad = "*"
+miette = { version = "*", features = ["fancy"] }
+thiserror = "*"
+dialoguer = "*"
+reqwest = { version = "*", features = ["json", "rustls-tls"] }
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+directories = "*"
+walkdir = "*"
+sha2 = "*"
