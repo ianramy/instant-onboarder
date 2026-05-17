@@ -1,12 +1,27 @@
+//! File system scanning and directory traversal utilities.
+//!
+//! This module is responsible for discovering relevant source code files within a
+//! target directory. It utilizes `walkdir` for efficient recursive traversal while
+//! actively filtering out heavy, irrelevant directories (like `node_modules` or `target`)
+//! to ensure optimal performance during the AI onboarding process.
+
 use crate::errors::OnboarderError;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
-/// Scan a directory and return a list of valid source files
+/// Scans a target directory recursively and returns a list of valid source files.
 ///
-/// This function traverses the directory tree and filters out:
-/// - Common build/dependency directories (.git, node_modules, target, dist, build)
-/// - Files that don't match common source code extensions
+/// This function traverses the directory tree starting from the provided `path`.
+/// It applies strict inclusion and exclusion rules to prevent processing binaries,
+/// build artifacts, or dependency folders, which saves both time and AI tokens.
+///
+/// Filtering Logic
+/// - Directory Exclusion: Actively skips common dependency and build directories
+///   like `.git`, `node_modules`, `target`, `dist`, and `build` (case-insensitive).
+/// - Extension Inclusion: Only accepts files matching a hardcoded whitelist of
+///   known source code and configuration extensions (e.g., `.rs`, `.py`, `.js`, `.toml`).
+/// - Symlinks: Currently configured to *not* follow symbolic links to prevent
+///   infinite loops or escaping the intended bounds of the target workspace.
 pub fn scan_directory(path: &Path) -> Result<Vec<PathBuf>, OnboarderError> {
     // Directories to ignore (case-insensitive)
     const IGNORED_DIRS: &[&str] = &[".git", "node_modules", "target", "dist", "build"];
@@ -95,5 +110,3 @@ mod tests {
         assert!(!files.iter().any(|p| p.to_string_lossy().contains("target")));
     }
 }
-
-// Made with Bob

@@ -1,8 +1,22 @@
+//! Centralized error handling and standardized diagnostic reporting.
+//!
+//! This module leverages the `thiserror` crate to derive standard library `Error`
+//! traits automatically, reducing boilerplate. Furthermore, it utilizes the `miette`
+//! crate to provide rich, colorful, and highly descriptive error diagnostics to the
+//! user, often including helpful resolution steps if something goes wrong.
+
 use miette::Diagnostic;
 use thiserror::Error;
 
+/// The central enum containing all possible failure states within the application.
+///
+/// By bubbling all errors up into this unified enum, functions across different
+/// modules (like the network client, the file parser, and the configuration manager)
+/// can all return a single, predictable `Result<T, OnboarderError>` signature.
 #[derive(Error, Debug, Diagnostic)]
 pub enum OnboarderError {
+    /// Emitted when the application state is invalid, missing, or malformed.
+    /// Often indicates that the user needs to provide credentials.
     #[error("Configuration error: {0}")]
     #[diagnostic(
         code(onboarder::config),
@@ -10,6 +24,8 @@ pub enum OnboarderError {
     )]
     ConfigError(String),
 
+    /// Emitted when file system operations fail (e.g., unable to read source files,
+    /// write to the cache, or access the config directory). Wraps the standard `std::io::Error`.
     #[error("I/O error: {0}")]
     #[diagnostic(
         code(onboarder::io),
@@ -17,6 +33,8 @@ pub enum OnboarderError {
     )]
     IoError(#[from] std::io::Error),
 
+    /// Emitted when external API responses or local directory structures do not conform
+    /// to expected formats, preventing successful data extraction.
     #[error("Parsing error: {0}")]
     #[diagnostic(
         code(onboarder::parsing),
@@ -24,6 +42,8 @@ pub enum OnboarderError {
     )]
     ParsingError(String),
 
+    /// Emitted when communication with external AI endpoints or local Daemons fails
+    /// due to timeouts, invalid domains, or lack of internet access. Wraps `reqwest::Error`.
     #[error("Network error: {0}")]
     #[diagnostic(
         code(onboarder::network),
@@ -31,6 +51,8 @@ pub enum OnboarderError {
     )]
     NetworkError(#[from] reqwest::Error),
 
+    /// Emitted specifically when the application fails to serialize or deserialize
+    /// local settings or network payloads. Wraps `serde_json::Error`.
     #[error("JSON serialization error: {0}")]
     #[diagnostic(
         code(onboarder::json),
@@ -38,5 +60,3 @@ pub enum OnboarderError {
     )]
     JsonError(#[from] serde_json::Error),
 }
-
-// Made with Bob
